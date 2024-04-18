@@ -1,16 +1,23 @@
-@Library('My-Jenkins-SharedLibrary')_
-
 pipeline{
     agent any
-    environment{
-        demoVar='TestVariable123'
+    tools{
+        maven 'local_maven'
     }
     stages{
-        stage ('testStage'){
+        stage ('Build'){
             steps{
-                script{
-                    deployDemo.test()
+                bat 'mvn clean package'
+            }
+            post{
+                success{
+                    echo "Archiving the Artifacts"
+                    archiveArtifacts artifacts: '/target/.war'
                 }
+            }
+        }
+        stage ('Deploy to tomcat server'){
+            steps{
+                deploy adapters: [tomcat7(credentialsId: 'bfe5ff6a-91d3-42dc-b5e5-64394237937f', path: '', url: 'http://192.168.99.148:8181/')], contextPath: null, war: '**/*.war'
             }
         }
     }
